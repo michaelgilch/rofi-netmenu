@@ -1,0 +1,78 @@
+#!/bin/bash
+# rofi-netmenu: rofi menus for ethernet, Wi-Fi (NetworkManager), openfortivpn
+# and Tailscale.
+#
+# Usage: rofi-netmenu [ethernet|wifi|forticlient|tailscale]
+
+set -o pipefail
+
+usage() {
+    echo "Usage: ${0##*/} [ethernet|wifi|forticlient|tailscale]" >&2
+    exit 2
+}
+
+# The library sits next to the script in the working tree (and under `make
+# link`, which symlinks the script), or in $PREFIX/lib/rofi-netmenu once
+# installed.
+here=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+for libdir in "$here/lib" "$here/../lib/rofi-netmenu"; do
+    [[ -f $libdir/netmenu-lib.sh ]] && break
+done
+if [[ ! -f $libdir/netmenu-lib.sh ]]; then
+    echo "${0##*/}: helper library not found" >&2
+    exit 1
+fi
+
+# shellcheck source=lib/netmenu-lib.sh
+source "$libdir/netmenu-lib.sh"
+# shellcheck source=lib/ethernet.sh
+source "$libdir/ethernet.sh"
+# shellcheck source=lib/wifi.sh
+source "$libdir/wifi.sh"
+# shellcheck source=lib/forticlient.sh
+source "$libdir/forticlient.sh"
+# shellcheck source=lib/tailscale.sh
+source "$libdir/tailscale.sh"
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/rofi-netmenu/config"
+# shellcheck source=/dev/null
+[[ -f $config ]] && source "$config"
+
+TERMINAL="${TERMINAL:-kitty}"
+forti_title="Forticlient${FORTI_NAME:+ ($FORTI_NAME)}"
+FORTI_NAME="${FORTI_NAME:-Forticlient}"
+TS_SSH_USER="${TS_SSH_USER:-$USER}"
+read -ra rofi_args <<< "${ROFI_ARGS:-}"
+
+# Entries for missing backends (no device, no FORTI_HOST, no tailscale) are
+# left out.
+top_menu() {
+    local key
+    while :; do
+        menu_reset
+        eth_available && row ethernet "Ethernet" network-wired
+        wifi_available && row wifi "Wifi" network-wireless
+        forti_available && row forticlient "$forti_title" network-vpn
+        ts_available && row tailscale "Tailscale" network-workgroup
+        if ((${#_keys[@]} == 0)); then
+            notify "rofi-netmenu" "Nothing to manage: no devices, FORTI_HOST or tailscale"
+            exit 0
+        fi
+        key=$(menu "Network") || exit 0
+        case $key in
+        ethernet) eth_menu back ;;
+        wifi) wifi_menu back ;;
+        forticlient) forti_menu back ;;
+        tailscale) ts_menu back ;;
+        esac
+    done
+}
+
+case "${1:-}" in
+"") top_menu ;;
+ethernet) eth_menu ;;
+wifi) wifi_menu ;;
+forticlient) forti_menu ;;
+tailscale) ts_menu ;;
+*) usage ;;
+esac

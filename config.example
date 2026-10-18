@@ -1,0 +1,51 @@
+# rofi-netmenu configuration. Copy to
+# ${XDG_CONFIG_HOME:-~/.config}/rofi-netmenu/config. It's sourced as bash and
+# every setting is optional.
+
+# ------------------------------------------------------------------- general
+
+# Extra flags passed to every rofi call. Split on whitespace; quotes inside
+# the value are not honored.
+#ROFI_ARGS="-theme gruvbox-dark"
+ROFI_ARGS=""
+
+# Command run (via bash -c) after any state change, e.g. to refresh a bar.
+#ON_CHANGE="polybar-msg action alerts hook 0"
+ON_CHANGE=""
+
+# Terminal for login/status/ssh windows. Must accept `-e <command...>`.
+# Defaults to $TERMINAL, then kitty.
+#TERMINAL="alacritty"
+
+# --------------------------------------------------------------- Forticlient
+# The Forticlient menu is hidden while FORTI_HOST is empty. See the README for
+# the sudoers rules it needs.
+
+# Name used in the password prompt and notifications, and shown as
+# "Forticlient (<name>)" in the menu title. Defaults to Forticlient.
+#FORTI_NAME=""
+FORTI_HOST=""
+FORTI_PORT="443"
+FORTI_USER=""
+# Certificate digest printed by openfortivpn on the first connect attempt.
+FORTI_TRUSTED_CERT=""
+
+# Target for Remote Apps (X-forwarded ssh, needs sshpass).
+FORTI_SSH_HOST=""
+FORTI_SSH_USER=""
+
+# Shown while the VPN is up. Format: "Name|command|icon".
+# SSH session commands run as-is, so include the terminal.
+FORTI_SSH_SESSIONS=(
+    #"build box|kitty -e ssh me@build01|utilities-terminal"
+)
+# Remote app commands run on FORTI_SSH_HOST over `ssh -X`.
+FORTI_SSH_APPS=(
+    #"Thunderbird|thunderbird|thunderbird"
+)
+
+# ----------------------------------------------------------------- Tailscale
+# The Tailscale menu is hidden when tailscale isn't installed.
+
+# User for ssh sessions to tailnet peers. Defaults to $USER.
+#TS_SSH_USER=""
