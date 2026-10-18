@@ -50,6 +50,7 @@ wifi_menu() {
             notify "Wifi" "Scanning…"
             rescan=yes
             ;;
+        connect) wifi_connect_menu ;;
         forget) wifi_forget_menu ;;
         ssid:*) wifi_select "${ssids[${key#ssid:}]}" ;;
         esac
@@ -111,7 +112,7 @@ wifi_secured() {
 }
 
 wifi_rows() {
-    local i ssid label
+    local i
 
     if [[ $(nmcli radio wifi) != enabled ]]; then
         row radio:on "Wifi: off" network-wireless-offline
@@ -119,23 +120,46 @@ wifi_rows() {
         return 0
     fi
 
-    # The first row is highlighted on open, so the SSID list comes first and
-    # the rows that drop the connection come last.
     wifi_scan "$1"
     # Listing from cache keeps the menu instant; a scan that doesn't block
     # keeps the cache fresh for the next open.
     [[ $1 == no ]] && nmcli device wifi rescan &>/dev/null &
+
+    # Active network on top. The top row has focus on open, so the rows that
+    # drop the connection come last.
     for i in "${!ssids[@]}"; do
-        ssid=${ssids[i]}
-        label="󰖩 ${wifi_bars[$ssid]}  $ssid"
-        wifi_secured "$ssid" && label+="  "
-        [[ -n ${wifi_used[$ssid]:-} ]] && label+="  ✓"
-        row "ssid:$i" "$label"
+        [[ -n ${wifi_used[${ssids[i]}]:-} ]] && row "ssid:$i" "$(wifi_label "${ssids[i]}")"
     done
-    row rescan "Rescan" view-refresh
+    row connect "Connect ▸" network-wireless
     row forget "Forget network ▸" edit-delete
+    row rescan "Rescan" view-refresh
     [[ $wifi_state == connected ]] && row disconnect "Disconnect" network-offline
     row radio:off "Wifi: on" network-wireless
+}
+
+# wifi_label <ssid>: signal bars, SSID, lock if secured, check if connected.
+wifi_label() {
+    local ssid=$1 label
+    label="󰖩 ${wifi_bars[$ssid]}  $ssid"
+    wifi_secured "$ssid" && label+="  "
+    [[ -n ${wifi_used[$ssid]:-} ]] && label+="  ✓"
+    printf '%s' "$label"
+}
+
+# Every scanned network except the active one, which is on the main menu.
+wifi_connect_menu() {
+    local i key
+    menu_reset
+    for i in "${!ssids[@]}"; do
+        [[ -n ${wifi_used[${ssids[i]}]:-} ]] && continue
+        row "ssid:$i" "$(wifi_label "${ssids[i]}")"
+    done
+    row back "Back" go-previous
+    key=$(menu "Connect") || exit 0
+    case $key in
+    back) return 0 ;;
+    ssid:*) wifi_select "${ssids[${key#ssid:}]}" ;;
+    esac
 }
 
 wifi_select() {
