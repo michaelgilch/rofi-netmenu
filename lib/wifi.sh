@@ -70,9 +70,9 @@ wifi_profiles() {
 # wifi_scan <no|yes>
 # Fills ssids (display order) and the wifi_* / known maps, keyed by SSID.
 wifi_scan() {
-    declare -gA known=() wifi_signal=() wifi_bars=() wifi_sec=() wifi_used=()
+    declare -gA known=() wifi_signal=() wifi_sec=() wifi_used=()
     ssids=()
-    local uuid ssid name inuse signal bars sec cur rank
+    local uuid ssid name inuse signal sec cur rank
 
     # Matched by SSID, not profile name, so renamed profiles and "SSID 1"
     # duplicates still count as known.
@@ -80,17 +80,16 @@ wifi_scan() {
         [[ -n $ssid ]] && known[$ssid]=$uuid
     done < <(wifi_profiles)
 
-    while IFS=: read -r inuse signal bars sec ssid; do
+    while IFS=: read -r inuse signal sec ssid; do
         [[ -n $ssid ]] || continue
         [[ $inuse == '*' ]] && wifi_used[$ssid]=1
         # SSIDs are untrusted, so keep them out of arithmetic contexts.
         cur=${wifi_signal[$ssid]:--1}
         if ((signal > cur)); then
             wifi_signal[$ssid]=$signal
-            wifi_bars[$ssid]=$bars
             wifi_sec[$ssid]=$sec
         fi
-    done < <(nmcli -t --escape no -f IN-USE,SIGNAL,BARS,SECURITY,SSID \
+    done < <(nmcli -t --escape no -f IN-USE,SIGNAL,SECURITY,SSID \
         device wifi list --rescan "$1")
 
     while IFS=$'\t' read -r _ _ ssid; do
@@ -137,13 +136,30 @@ wifi_rows() {
     row radio:off "Wifi: on" network-wireless
 }
 
-# wifi_label <ssid>: signal bars, SSID, lock if secured, check if connected.
+# wifi_label <ssid>: signal glyph (with a lock when secured), SSID, and a
+# check mark if connected.
 wifi_label() {
-    local ssid=$1 label
-    label="󰖩 ${wifi_bars[$ssid]}  $ssid"
-    wifi_secured "$ssid" && label+="  "
-    [[ -n ${wifi_used[$ssid]:-} ]] && label+="  ✓"
-    printf '%s' "$label"
+    local ssid=$1 signal=${wifi_signal[$1]} level=0 open locked
+    # Nerd Font md-wifi_strength_{outline,1,2,3,4} and their _lock variants.
+    open=(󰤯 󰤟 󰤢 󰤥 󰤨)
+    locked=(󰤬 󰤡 󰤤 󰤧 󰤪)
+    if ((signal >= 75)); then
+        level=4
+    elif ((signal >= 50)); then
+        level=3
+    elif ((signal >= 25)); then
+        level=2
+    elif ((signal > 0)); then
+        level=1
+    fi
+
+    if wifi_secured "$ssid"; then
+        printf '%s  %s' "${locked[level]}" "$ssid"
+    else
+        printf '%s  %s' "${open[level]}" "$ssid"
+    fi
+    [[ -n ${wifi_used[$ssid]:-} ]] && printf '  ✓'
+    return 0
 }
 
 # Every scanned network except the active one, which is on the main menu.
