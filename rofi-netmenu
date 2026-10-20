@@ -67,9 +67,17 @@ top_menu() {
     done
 }
 
-if [[ -z ${1:-} ]]; then
-    top_menu
-fi
+case ${1:-} in
+"") top_menu ;;
+# "name<TAB>label<TAB>icon" per backend, for generating launcher entries.
+--list)
+    for i in "${backend_idx[@]}"; do
+        printf '%s\t%s\t%s\n' "${_backend_names[i]}" "${_backend_labels[i]}" \
+            "${_backend_icons[i]}"
+    done
+    exit 0
+    ;;
+esac
 for i in "${backend_idx[@]}"; do
     if [[ ${_backend_names[i]} == "$1" ]]; then
         "${_backend_prefixes[i]}_menu"

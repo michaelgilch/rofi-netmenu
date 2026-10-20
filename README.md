@@ -65,6 +65,14 @@ sudo make PREFIX=/usr/local install
 
 Remove it with `make uninstall` (using the same `PREFIX`).
 
+### Launcher entries
+
+`make install` also writes a `.desktop` entry for the top menu and one per
+backend to `~/.local/share/applications`. A launcher such as `rofi -show drun`
+then finds them: type `wifi` or `tailscale` to open that menu directly, or
+`netmenu` to list them all. The entries are generated at install time, so
+rerun `make install` (or just `make desktop`) after adding a backend.
+
 For development, `make link` symlinks the script from your working tree
 instead. The script resolves its own symlink and loads `lib/` from the
 checkout, so edits take effect immediately.
