@@ -3,6 +3,11 @@
 # Forticlient menu: openfortivpn connect/disconnect, SSH sessions and remote
 # apps over the tunnel.
 
+forti_title="Forticlient${FORTI_NAME:+ ($FORTI_NAME)}"
+FORTI_NAME="${FORTI_NAME:-Forticlient}"
+
+backend forticlient forti 30 "$forti_title" network-vpn
+
 forti_available() {
     [[ -n ${FORTI_HOST:-} ]]
 }

@@ -6,6 +6,8 @@
 # field last, so `IFS=: read` splits cleanly and the last variable keeps any
 # colons in a name.
 
+backend wifi wifi 20 "Wifi" network-wireless
+
 wifi_load_device() {
     wifi_iface="" wifi_state=""
     local dev type state

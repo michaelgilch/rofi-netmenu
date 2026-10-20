@@ -6,6 +6,8 @@
 # field last, so `IFS=: read` splits cleanly and the last variable keeps any
 # colons in a name.
 
+backend ethernet eth 10 "Ethernet" network-wired
+
 eth_load() {
     eth_dev=() eth_state=() eth_conn=()
     local dev type state conn

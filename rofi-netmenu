@@ -1,13 +1,19 @@
 #!/bin/bash
-# rofi-netmenu: rofi menus for ethernet, Wi-Fi (NetworkManager), openfortivpn
-# and Tailscale.
+# rofi-netmenu: rofi menus for network connections. Each lib/*.sh file other
+# than netmenu-lib.sh is a backend (ethernet, Wi-Fi, openfortivpn, Tailscale,
+# ...) that registers itself when sourced.
 #
-# Usage: rofi-netmenu [ethernet|wifi|forticlient|tailscale]
+# Usage: rofi-netmenu [backend]
 
 set -o pipefail
 
 usage() {
-    echo "Usage: ${0##*/} [ethernet|wifi|forticlient|tailscale]" >&2
+    local names=() i
+    for i in "${backend_idx[@]}"; do
+        names+=("${_backend_names[i]}")
+    done
+    local IFS='|'
+    echo "Usage: ${0##*/} [${names[*]}]" >&2
     exit 2
 }
 
@@ -25,54 +31,49 @@ fi
 
 # shellcheck source=lib/netmenu-lib.sh
 source "$libdir/netmenu-lib.sh"
-# shellcheck source=lib/ethernet.sh
-source "$libdir/ethernet.sh"
-# shellcheck source=lib/wifi.sh
-source "$libdir/wifi.sh"
-# shellcheck source=lib/forticlient.sh
-source "$libdir/forticlient.sh"
-# shellcheck source=lib/tailscale.sh
-source "$libdir/tailscale.sh"
 
+# The config is loaded before the backends so they can set their own defaults
+# from it when sourced.
 config="${XDG_CONFIG_HOME:-$HOME/.config}/rofi-netmenu/config"
 # shellcheck source=/dev/null
 [[ -f $config ]] && source "$config"
 
 TERMINAL="${TERMINAL:-kitty}"
-forti_title="Forticlient${FORTI_NAME:+ ($FORTI_NAME)}"
-FORTI_NAME="${FORTI_NAME:-Forticlient}"
-TS_SSH_USER="${TS_SSH_USER:-$USER}"
 read -ra rofi_args <<< "${ROFI_ARGS:-}"
 
-# Entries for missing backends (no device, no FORTI_HOST, no tailscale) are
-# left out.
+for lib in "$libdir"/*.sh; do
+    [[ $lib == */netmenu-lib.sh ]] && continue
+    # shellcheck source=/dev/null
+    source "$lib"
+done
+mapfile -t backend_idx < <(backend_indexes)
+
+# Entries for unavailable backends (no device, no FORTI_HOST, no tailscale)
+# are left out. Row keys are registry indexes.
 top_menu() {
-    local key
+    local key i
     while :; do
         menu_reset
-        eth_available && row ethernet "Ethernet" network-wired
-        wifi_available && row wifi "Wifi" network-wireless
-        forti_available && row forticlient "$forti_title" network-vpn
-        ts_available && row tailscale "Tailscale" network-workgroup
+        for i in "${backend_idx[@]}"; do
+            "${_backend_prefixes[i]}_available" &&
+                row "$i" "${_backend_labels[i]}" "${_backend_icons[i]}"
+        done
         if ((${#_keys[@]} == 0)); then
-            notify "rofi-netmenu" "Nothing to manage: no devices, FORTI_HOST or tailscale"
+            notify "rofi-netmenu" "Nothing to manage: no backend is available"
             exit 0
         fi
         key=$(menu "Network") || exit 0
-        case $key in
-        ethernet) eth_menu back ;;
-        wifi) wifi_menu back ;;
-        forticlient) forti_menu back ;;
-        tailscale) ts_menu back ;;
-        esac
+        "${_backend_prefixes[key]}_menu" back
     done
 }
 
-case "${1:-}" in
-"") top_menu ;;
-ethernet) eth_menu ;;
-wifi) wifi_menu ;;
-forticlient) forti_menu ;;
-tailscale) ts_menu ;;
-*) usage ;;
-esac
+if [[ -z ${1:-} ]]; then
+    top_menu
+fi
+for i in "${backend_idx[@]}"; do
+    if [[ ${_backend_names[i]} == "$1" ]]; then
+        "${_backend_prefixes[i]}_menu"
+        exit 0
+    fi
+done
+usage

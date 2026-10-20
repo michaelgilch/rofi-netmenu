@@ -2,6 +2,36 @@
 # shellcheck disable=SC2154  # globals are set in rofi-netmenu and netmenu-lib.sh
 # Shared helpers for rofi-netmenu. Sourced, not executed.
 
+# ------------------------------------------------------------------ backends
+
+# Every other lib/*.sh file is a backend that registers itself with backend()
+# when sourced. rofi-netmenu builds the top menu and the command line from
+# this registry.
+_backend_names=()
+_backend_prefixes=()
+_backend_orders=()
+_backend_labels=()
+_backend_icons=()
+
+# backend <name> <prefix> <order> <label> <icon>
+# <name> is the command line argument, <order> the position in the top menu.
+# The backend must define <prefix>_available and <prefix>_menu [back].
+backend() {
+    _backend_names+=("$1")
+    _backend_prefixes+=("$2")
+    _backend_orders+=("$3")
+    _backend_labels+=("$4")
+    _backend_icons+=("$5")
+}
+
+# Prints registry indexes sorted by order.
+backend_indexes() {
+    local i
+    for i in "${!_backend_names[@]}"; do
+        printf '%s\t%s\n' "${_backend_orders[i]}" "$i"
+    done | sort -n -k1,1 | cut -f2
+}
+
 # ------------------------------------------------------------------ rofi rows
 
 # Rows are collected in parallel arrays and printed by menu(). Each row has a

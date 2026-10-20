@@ -2,6 +2,10 @@
 # shellcheck disable=SC2154  # globals are set in rofi-netmenu and netmenu-lib.sh
 # Tailscale menu: up/down, exit nodes and devices.
 
+TS_SSH_USER="${TS_SSH_USER:-$USER}"
+
+backend tailscale ts 40 "Tailscale" network-workgroup
+
 ts_available() {
     command -v tailscale >/dev/null
 }

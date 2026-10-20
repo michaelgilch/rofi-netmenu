@@ -1,8 +1,8 @@
-PREFIX ?= /usr/local
+PREFIX ?= $(HOME)/.local
 BINDIR = $(DESTDIR)$(PREFIX)/bin
 LIBDIR = $(DESTDIR)$(PREFIX)/lib/rofi-netmenu
 
-LIBS = lib/netmenu-lib.sh lib/ethernet.sh lib/wifi.sh lib/forticlient.sh lib/tailscale.sh
+LIBS = $(wildcard lib/*.sh)
 
 .PHONY: install uninstall link check
 
