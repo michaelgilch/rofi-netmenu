@@ -122,7 +122,7 @@ The file is sourced as bash from `${XDG_CONFIG_HOME:-~/.config}/rofi-netmenu/con
 | `FORTI_SSH_HOST` | | Host that Remote Apps run on |
 | `FORTI_SSH_USER` | | User for Remote Apps |
 | `FORTI_SSH_SESSIONS` | `()` | Array of `"Name\|command\|icon"`. Commands run as-is, so include the terminal |
-| `FORTI_SSH_APPS` | `()` | Array of `"Name\|command\|icon"`. Commands run on `FORTI_SSH_HOST` over `ssh -X` |
+| `FORTI_SSH_APPS` | `()` | Array of `"Name\|command\|icon"`. Commands run on `FORTI_SSH_HOST` over `ssh -Y` |
 | `TS_SSH_USER` | `$USER` | User for SSH sessions to Tailscale peers |
 
 ### Forticlient sudoers rules

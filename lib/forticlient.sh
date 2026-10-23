@@ -154,6 +154,6 @@ forti_apps_menu() {
     pw=$(prompt_password "SSH password ($target)") || exit 0
     # sshpass -e reads the password from the environment, so it never shows
     # up in ps the way -p does.
-    SSHPASS=$pw setsid -f sshpass -e ssh -X -C "$target" "$cmd" &>/dev/null
+    SSHPASS=$pw setsid -f sshpass -e ssh -Y -C "$target" "$cmd" &>/dev/null
     exit 0
 }

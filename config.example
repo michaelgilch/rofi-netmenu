@@ -39,7 +39,7 @@ FORTI_SSH_USER=""
 FORTI_SSH_SESSIONS=(
     #"build box|kitty -e ssh me@build01|utilities-terminal"
 )
-# Remote app commands run on FORTI_SSH_HOST over `ssh -X`.
+# Remote app commands run on FORTI_SSH_HOST over `ssh -Y`.
 FORTI_SSH_APPS=(
     #"Thunderbird|thunderbird|thunderbird"
 )
