@@ -189,7 +189,6 @@ wifi_select() {
     fi
 
     if [[ -n ${known[$ssid]:-} ]]; then
-        notify "Wifi" "Connecting to $ssid…"
         run_bg "Connected to $ssid" "Failed to connect to $ssid" \
             nmcli connection up uuid "${known[$ssid]}"
     fi
@@ -201,7 +200,6 @@ wifi_select() {
         ;;
     esac
 
-    notify "Wifi" "Connecting to $ssid…"
     if ! wifi_secured "$ssid"; then
         run_bg "Connected to $ssid" "Failed to connect to $ssid" \
             nmcli device wifi connect "$ssid" ifname "$wifi_iface"

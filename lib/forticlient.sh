@@ -79,7 +79,7 @@ forti_connect() {
         local pid connected="" _
         printf '%s\n' "$pw" | "${forti_cmd[@]}" &>/dev/null &
         pid=$!
-        for _ in {1..30}; do
+        for _ in {1..60}; do
             if forti_up; then
                 connected=1
                 notify "$FORTI_NAME" "Connected"
@@ -101,9 +101,7 @@ forti_connect() {
 }
 
 forti_disconnect() {
-    if sudo -n pkill -x openfortivpn; then
-        notify "$FORTI_NAME" "Disconnecting…"
-    else
+    if ! sudo -n pkill -x openfortivpn; then
         notify "$FORTI_NAME" "Disconnect failed. Is the sudoers rule for pkill set up?" critical
     fi
     on_change
