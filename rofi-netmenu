@@ -20,7 +20,8 @@ usage() {
 # The library sits next to the script in the working tree (and under `make
 # link`, which symlinks the script), or in $PREFIX/lib/rofi-netmenu once
 # installed.
-here=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+self=$(readlink -f "${BASH_SOURCE[0]}")
+here=$(dirname "$self")
 for libdir in "$here/lib" "$here/../lib/rofi-netmenu"; do
     [[ -f $libdir/netmenu-lib.sh ]] && break
 done
@@ -40,6 +41,18 @@ config="${XDG_CONFIG_HOME:-$HOME/.config}/rofi-netmenu/config"
 
 TERMINAL="${TERMINAL:-kitty}"
 read -ra rofi_args <<< "${ROFI_ARGS:-}"
+
+# ssh runs this script as its SSH_ASKPASS helper for Remote Apps, so it only
+# prompts if key auth fails. The prompt is the one argument and the answer
+# goes to stdout. A host key question is shown unmasked so "yes" is readable.
+if [[ -n ${NETMENU_ASKPASS:-} ]]; then
+    if [[ $1 == *"(yes/no"* ]]; then
+        rofi -dmenu -l 0 -mesg "$1" -p "yes/no" "${rofi_args[@]}" </dev/null
+    else
+        prompt_password "$1"
+    fi
+    exit
+fi
 
 for lib in "$libdir"/*.sh; do
     [[ $lib == */netmenu-lib.sh ]] && continue

@@ -137,7 +137,7 @@ forti_sessions_menu() {
 }
 
 forti_apps_menu() {
-    local key i cmd pw target
+    local key i cmd target
     forti_entries FORTI_SSH_APPS
     menu_reset
     for i in "${!entry_name[@]}"; do
@@ -149,9 +149,9 @@ forti_apps_menu() {
 
     cmd=${entry_cmd[${key#e:}]}
     target="${FORTI_SSH_USER:+$FORTI_SSH_USER@}$FORTI_SSH_HOST"
-    pw=$(prompt_password "SSH password ($target)") || exit 0
-    # sshpass -e reads the password from the environment, so it never shows
-    # up in ps the way -p does.
-    SSHPASS=$pw setsid -f sshpass -e ssh -X -C "$target" "$cmd" &>/dev/null
+    # ssh tries keys first and only runs the askpass helper (this script, see
+    # rofi-netmenu) for a password, passphrase or host key question.
+    SSH_ASKPASS=$self SSH_ASKPASS_REQUIRE=force NETMENU_ASKPASS=1 \
+        setsid -f ssh -X -C "$target" "$cmd" &>/dev/null
     exit 0
 }

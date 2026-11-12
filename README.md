@@ -41,7 +41,7 @@ Per backend:
 | Backend | Needs |
 | --- | --- |
 | Ethernet, Wi-Fi | NetworkManager (`nmcli`) |
-| Forticlient | `openfortivpn`, `sudo`; `sshpass` for Remote Apps |
+| Forticlient | `openfortivpn`, `sudo` |
 | Tailscale | `tailscale`, `jq`; `xclip` for Copy IP |
 | Login/status/SSH windows | A terminal that accepts `-e <command...>` (default `kitty`) |
 | `make check` | `shellcheck` |
@@ -122,7 +122,7 @@ The file is sourced as bash from `${XDG_CONFIG_HOME:-~/.config}/rofi-netmenu/con
 | `FORTI_SSH_HOST` | | Host that Remote Apps run on |
 | `FORTI_SSH_USER` | | User for Remote Apps |
 | `FORTI_SSH_SESSIONS` | `()` | Array of `"Name\|command\|icon"`. Commands run as-is, so include the terminal |
-| `FORTI_SSH_APPS` | `()` | Array of `"Name\|command\|icon"`. Commands run on `FORTI_SSH_HOST` over `ssh -X` |
+| `FORTI_SSH_APPS` | `()` | Array of `"Name\|command\|icon"`. Commands run on `FORTI_SSH_HOST` over `ssh -X`. Uses your SSH key if the host accepts it, otherwise prompts for the password in rofi |
 | `TS_SSH_USER` | `$USER` | User for SSH sessions to Tailscale peers |
 
 ### Forticlient sudoers rules
@@ -164,8 +164,8 @@ You only need to do it once.
 
 - Passwords never appear on a command line, where `ps` could show them.
   Wi-Fi passwords go to `nmcli --ask` on stdin, the VPN password goes to
-  `openfortivpn` on stdin, and the Remote Apps SSH password goes to `sshpass -e`
-  through the environment.
+  `openfortivpn` on stdin, and the Remote Apps SSH password goes to `ssh`
+  through its `SSH_ASKPASS` helper, which is only asked when key auth fails.
 - `openfortivpn` runs with `-c /dev/null` so a password saved in
   `/etc/openfortivpn/config` can't override the one you typed.
 - SSIDs and connection names are treated as untrusted input: they're parsed

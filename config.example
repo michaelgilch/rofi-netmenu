@@ -30,7 +30,7 @@ FORTI_USER=""
 # Certificate digest printed by openfortivpn on the first connect attempt.
 FORTI_TRUSTED_CERT=""
 
-# Target for Remote Apps (X-forwarded ssh, needs sshpass).
+# Target for Remote Apps (X-forwarded ssh; key auth, else a password prompt).
 FORTI_SSH_HOST=""
 FORTI_SSH_USER=""
 
